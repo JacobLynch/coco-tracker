@@ -11,7 +11,7 @@ export default function WidgetPage() {
   }, []);
 
   const scriptableUrl = baseUrl
-    ? `scriptable:///add?scriptName=Coco%20Capital&url=${encodeURIComponent(baseUrl + "/widget.js")}`
+    ? `scriptable:///add?scriptName=Coco%20Capital&url=${encodeURIComponent(baseUrl + "/widget-loader.js")}`
     : "#";
 
   const handleCopy = async () => {

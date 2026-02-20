@@ -1,26 +1,33 @@
 {
-  "name": "coco-tracker-init",
+  "name": "coco-tracker",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "npx tsx --env-file=.env.local scripts/migrate.ts",
+    "backfill": "npx tsx --env-file=.env.local scripts/backfill.ts",
+    "recompute-balances": "npx tsx --env-file=.env.local scripts/recompute-balances.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "@trigger.dev/sdk": "^4.4.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@trigger.dev/build": "^4.4.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

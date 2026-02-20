@@ -5,18 +5,31 @@ import { useEffect, useState } from "react";
 export default function WidgetPage() {
   const [baseUrl, setBaseUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     setBaseUrl(window.location.origin);
   }, []);
 
-  const installUrl = baseUrl ? `${baseUrl}/widget-install` : "#";
-  const shareUrl = baseUrl ? `${baseUrl}/widget` : "";
+  const loaderScript = baseUrl
+    ? `// Coco Capital — Auto-updating widget\nconst req = new Request("${baseUrl}/widget.js")\nconst code = await req.loadString()\neval(code)`
+    : "";
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(shareUrl);
+  const handleInstall = async () => {
+    if (!loaderScript) return;
+    await navigator.clipboard.writeText(loaderScript);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 3000);
+    // Give clipboard a moment, then open Scriptable to a new script
+    setTimeout(() => {
+      window.location.href = "scriptable:///add";
+    }, 300);
+  };
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(baseUrl + "/widget");
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   return (
@@ -53,18 +66,24 @@ export default function WidgetPage() {
             </a>
             <span className="text-zinc-400"> (free)</span>
           </Step>
-          <Step n={2}>
-            <a
-              href={installUrl}
-              className="text-emerald-400 underline underline-offset-2"
+          <Step n={2} action>
+            <button
+              onClick={handleInstall}
+              className="text-emerald-400 underline underline-offset-2 cursor-pointer bg-transparent border-none p-0 text-[13px] text-left"
             >
-              Tap here to add the script
-            </a>
-            <span className="text-zinc-500">
-              {" "}— opens in Scriptable
-            </span>
+              {copied
+                ? "Copied! Paste it in Scriptable"
+                : "Tap here to copy the script & open Scriptable"}
+            </button>
           </Step>
           <Step n={3}>
+            <span className="text-zinc-400">
+              Paste the script, tap{" "}
+              <span className="text-zinc-300">Done</span>, then rename it to{" "}
+              <span className="text-zinc-300">&quot;Coco Capital&quot;</span>
+            </span>
+          </Step>
+          <Step n={4}>
             <span className="text-zinc-400">
               Long-press your home screen, tap{" "}
               <span className="text-zinc-300">+</span>, search for{" "}
@@ -72,7 +91,7 @@ export default function WidgetPage() {
               widget
             </span>
           </Step>
-          <Step n={4}>
+          <Step n={5}>
             <span className="text-zinc-400">
               Long-press the new widget, tap{" "}
               <span className="text-zinc-300">Edit Widget</span>, select{" "}
@@ -92,20 +111,34 @@ export default function WidgetPage() {
           Send them this page and they can set it up in under a minute.
         </p>
         <button
-          onClick={handleCopy}
+          onClick={handleCopyLink}
           className="px-5 py-2.5 text-xs font-medium rounded-xl bg-white/[0.06] text-zinc-400 ring-1 ring-white/[0.08] hover:bg-white/[0.1] hover:text-zinc-300 transition-all active:scale-95 cursor-pointer"
         >
-          {copied ? "Copied!" : "Copy page link"}
+          {linkCopied ? "Copied!" : "Copy page link"}
         </button>
       </div>
     </main>
   );
 }
 
-function Step({ n, children }: { n: number; children: React.ReactNode }) {
+function Step({
+  n,
+  children,
+  action,
+}: {
+  n: number;
+  children: React.ReactNode;
+  action?: boolean;
+}) {
   return (
     <div className="flex items-start gap-3.5">
-      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/[0.06] ring-1 ring-white/[0.08] flex items-center justify-center text-[11px] font-semibold text-zinc-500">
+      <span
+        className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold ${
+          action
+            ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
+            : "bg-white/[0.06] ring-1 ring-white/[0.08] text-zinc-500"
+        }`}
+      >
         {n}
       </span>
       <p className="text-[13px] leading-relaxed pt-0.5">{children}</p>

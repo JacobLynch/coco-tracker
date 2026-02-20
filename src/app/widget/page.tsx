@@ -10,12 +10,11 @@ export default function WidgetPage() {
     setBaseUrl(window.location.origin);
   }, []);
 
-  const scriptableUrl = baseUrl
-    ? `scriptable:///add?scriptName=Coco%20Capital&url=${encodeURIComponent(baseUrl + "/widget-loader.js")}`
-    : "#";
+  const installUrl = baseUrl ? `${baseUrl}/widget-install` : "#";
+  const shareUrl = baseUrl ? `${baseUrl}/widget` : "";
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(scriptableUrl);
+    await navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -56,15 +55,27 @@ export default function WidgetPage() {
           </Step>
           <Step n={2}>
             <a
-              href={scriptableUrl}
+              href={installUrl}
               className="text-emerald-400 underline underline-offset-2"
             >
               Tap here to add the script
             </a>
+            <span className="text-zinc-500">
+              {" "}— opens in Scriptable
+            </span>
           </Step>
           <Step n={3}>
             <span className="text-zinc-400">
-              Long-press your home screen → add a Scriptable widget → choose{" "}
+              Long-press your home screen, tap{" "}
+              <span className="text-zinc-300">+</span>, search for{" "}
+              <span className="text-zinc-300">Scriptable</span>, add a small
+              widget
+            </span>
+          </Step>
+          <Step n={4}>
+            <span className="text-zinc-400">
+              Long-press the new widget, tap{" "}
+              <span className="text-zinc-300">Edit Widget</span>, select{" "}
               <span className="text-zinc-300">&quot;Coco Capital&quot;</span>
             </span>
           </Step>
@@ -84,7 +95,7 @@ export default function WidgetPage() {
           onClick={handleCopy}
           className="px-5 py-2.5 text-xs font-medium rounded-xl bg-white/[0.06] text-zinc-400 ring-1 ring-white/[0.08] hover:bg-white/[0.1] hover:text-zinc-300 transition-all active:scale-95 cursor-pointer"
         >
-          {copied ? "Copied!" : "Copy install link"}
+          {copied ? "Copied!" : "Copy page link"}
         </button>
       </div>
     </main>

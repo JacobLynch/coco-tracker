@@ -168,9 +168,9 @@ function buildError(msg) {
   return w;
 }
 
-// ── Main (wrapped in async IIFE for eval() compatibility) ───────────────
+// ── Main (no top-level await for eval() compatibility) ──────────────────
 
-await (async () => {
+(async () => {
   try {
     const widget = await buildWidget();
     if (config.runsInWidget) {

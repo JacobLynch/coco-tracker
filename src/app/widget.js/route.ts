@@ -168,25 +168,26 @@ function buildError(msg) {
   return w;
 }
 
-// ── Main ────────────────────────────────────────────────────────────────
+// ── Main (wrapped in async IIFE for eval() compatibility) ───────────────
 
-try {
-  const widget = await buildWidget();
-  if (config.runsInWidget) {
-    Script.setWidget(widget);
-  } else {
-    await widget.presentSmall();
+await (async () => {
+  try {
+    const widget = await buildWidget();
+    if (config.runsInWidget) {
+      Script.setWidget(widget);
+    } else {
+      await widget.presentSmall();
+    }
+  } catch (err) {
+    const widget = buildError(err.message || "Failed to load");
+    if (config.runsInWidget) {
+      Script.setWidget(widget);
+    } else {
+      await widget.presentSmall();
+    }
   }
-} catch (err) {
-  const widget = buildError(err.message || "Failed to load");
-  if (config.runsInWidget) {
-    Script.setWidget(widget);
-  } else {
-    await widget.presentSmall();
-  }
-}
-
-Script.complete();
+  Script.complete();
+})();
 `;
 
 export async function GET(request: Request) {

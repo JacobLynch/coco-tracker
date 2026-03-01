@@ -12,6 +12,11 @@ interface Summary {
   as_of: string;
 }
 
+interface RecentDay {
+  date: string;
+  change: number;
+}
+
 const PERIODS: { value: Period; label: string }[] = [
   { value: "1d", label: "1D" },
   { value: "7d", label: "7D" },
@@ -64,9 +69,24 @@ function formatFundBalance(value: number): string {
   });
 }
 
+function formatShortChange(value: number): string {
+  const sign = value >= 0 ? "+" : "-";
+  const abs = Math.abs(value);
+  if (abs >= 1000) {
+    return sign + (abs / 1000).toFixed(1) + "k";
+  }
+  return sign + Math.round(abs);
+}
+
+function formatDayLabel(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  return date.toLocaleDateString("en-US", { weekday: "short" });
+}
+
 export default function Page() {
   const [period, setPeriod] = useState<Period>("1d");
   const [data, setData] = useState<Summary | null>(null);
+  const [recentDays, setRecentDays] = useState<RecentDay[]>([]);
   const [ready, setReady] = useState(false);
   const hasLoaded = useRef(false);
 
@@ -82,6 +102,13 @@ export default function Page() {
       })
       .catch(() => {});
   }, [period]);
+
+  useEffect(() => {
+    fetch("/api/recent-days")
+      .then((res) => res.json())
+      .then((d) => setRecentDays(d))
+      .catch(() => {});
+  }, []);
 
   const isPositive = data ? data.period_change_usd >= 0 : true;
 
@@ -182,6 +209,32 @@ export default function Page() {
             ))}
           </div>
         </div>
+
+        {/* Recent activity pills */}
+        {recentDays.length > 0 && (
+          <div style={stagger(0.35)} className="flex items-center gap-2 mb-14">
+            {recentDays.map((day) => {
+              const positive = day.change >= 0;
+              return (
+                <div
+                  key={day.date}
+                  className="flex flex-col items-center px-3 py-2 rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06]"
+                >
+                  <span className="text-[9px] tracking-[0.15em] uppercase text-zinc-600 font-medium">
+                    {formatDayLabel(day.date)}
+                  </span>
+                  <span
+                    className={`font-mono text-[11px] font-semibold mt-0.5 ${
+                      positive ? "text-emerald-400" : "text-red-400"
+                    }`}
+                  >
+                    {formatShortChange(day.change)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Divider */}
         <div

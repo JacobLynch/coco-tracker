@@ -23,6 +23,30 @@ function periodToDate(period: Period): string | null {
   return now.toISOString().slice(0, 10);
 }
 
+export async function getRecentDays() {
+  // Fetch 6 most recent rows to compute 5 deltas
+  const result = await db.execute(
+    `SELECT date, personal_balance FROM daily_performance
+     WHERE personal_balance IS NOT NULL
+     ORDER BY date DESC LIMIT 6`
+  );
+
+  if (result.rows.length < 2) return [];
+
+  // Rows are newest-first; reverse to oldest-first for delta calculation
+  const rows = [...result.rows].reverse();
+  const days: { date: string; change: number }[] = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    days.push({
+      date: rows[i].date as string,
+      change: (rows[i].personal_balance as number) - (rows[i - 1].personal_balance as number),
+    });
+  }
+
+  return days; // oldest-first (left-to-right)
+}
+
 export async function getSummary(period: Period) {
   // Latest row with personal_balance
   const latest = await db.execute(

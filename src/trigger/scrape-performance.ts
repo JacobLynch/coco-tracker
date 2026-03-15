@@ -101,13 +101,15 @@ export const scrapePerformance = schedules.task({
     const updates: { date: string; personal_balance: number }[] = [];
     for (const row of parsed) {
       const dayEvents = eventsByDate.get(row.date) || [];
+      let hadTrueUp = false;
       for (const ev of dayEvents) {
         if (ev.type === "CONTRIBUTION") balance += ev.amount;
         else if (ev.type === "WITHDRAWAL") balance -= ev.amount;
+        else if (ev.type === "TRUE_UP") { balance = ev.amount; hadTrueUp = true; }
       }
 
-      if (balance > 0 && row.daily_growth !== 0) {
-        balance = balance * (1 + row.daily_growth / 100);
+      if (!hadTrueUp && balance > 0 && row.daily_growth !== 0) {
+        balance = balance * (1 + (row.daily_growth * 0.75) / 100);
       }
       updates.push({ date: row.date, personal_balance: balance });
     }

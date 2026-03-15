@@ -27,13 +27,52 @@ async function migrate() {
     `CREATE TABLE IF NOT EXISTS account_events (
       id              INTEGER PRIMARY KEY AUTOINCREMENT,
       date            TEXT NOT NULL,
-      type            TEXT NOT NULL CHECK (type IN ('CONTRIBUTION', 'WITHDRAWAL')),
+      type            TEXT NOT NULL CHECK (type IN ('CONTRIBUTION', 'WITHDRAWAL', 'TRUE_UP')),
       amount          REAL NOT NULL,
       notes           TEXT,
       created_at      TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
     `CREATE INDEX IF NOT EXISTS idx_account_events_date ON account_events(date)`,
   ];
+
+  // Migration: update CHECK constraint to allow TRUE_UP
+  // SQLite can't ALTER CHECK constraints, so recreate the table if needed
+  const hasOldConstraint = await db.execute(
+    `SELECT sql FROM sqlite_master WHERE type='table' AND name='account_events'`
+  );
+  if (
+    hasOldConstraint.rows.length > 0 &&
+    !(hasOldConstraint.rows[0].sql as string).includes("TRUE_UP")
+  ) {
+    console.log("Migrating account_events to allow TRUE_UP type...");
+    await db.batch([
+      {
+        sql: `CREATE TABLE account_events_new (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          date            TEXT NOT NULL,
+          type            TEXT NOT NULL CHECK (type IN ('CONTRIBUTION', 'WITHDRAWAL', 'TRUE_UP')),
+          amount          REAL NOT NULL,
+          notes           TEXT,
+          created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+        )`,
+        args: [],
+      },
+      {
+        sql: `INSERT INTO account_events_new SELECT * FROM account_events`,
+        args: [],
+      },
+      { sql: `DROP TABLE account_events`, args: [] },
+      {
+        sql: `ALTER TABLE account_events_new RENAME TO account_events`,
+        args: [],
+      },
+      {
+        sql: `CREATE INDEX IF NOT EXISTS idx_account_events_date ON account_events(date)`,
+        args: [],
+      },
+    ]);
+    console.log("Migration complete: account_events updated.");
+  }
 
   for (const sql of statements) {
     await db.execute(sql);

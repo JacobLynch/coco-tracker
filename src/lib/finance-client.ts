@@ -36,6 +36,18 @@ interface DailyPerformanceResponse {
   };
 }
 
+export interface DocEntry {
+  id: number;
+  created_at: string;
+  type: string;
+  name: string;
+  filename: string;
+}
+
+interface DocsResponse {
+  data: DocEntry[];
+}
+
 export class FinanceClient {
   private token: string | null = null;
   private accountId: number | null = null;
@@ -98,6 +110,48 @@ export class FinanceClient {
 
     const data: DailyPerformanceResponse = await res.json();
     return data.data.recentTransactions.data;
+  }
+
+  async listDocs(): Promise<DocEntry[]> {
+    if (!this.token) {
+      throw new Error("Must call login() first");
+    }
+
+    const res = await fetch(`${BASE_URL}/user/docs`, {
+      headers: {
+        accept: "application/json",
+        authorization: `Bearer ${this.token}`,
+        origin: "https://dashboard.cococapital.llc",
+        referer: "https://dashboard.cococapital.llc/",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`List docs failed: ${res.status} ${res.statusText}`);
+    }
+
+    const data: DocsResponse = await res.json();
+    return data.data;
+  }
+
+  async downloadDoc(docId: number): Promise<Buffer> {
+    if (!this.token) {
+      throw new Error("Must call login() first");
+    }
+
+    const res = await fetch(`${BASE_URL}/user/docs/${docId}`, {
+      headers: {
+        authorization: `Bearer ${this.token}`,
+        origin: "https://dashboard.cococapital.llc",
+        referer: "https://dashboard.cococapital.llc/",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Download doc failed: ${res.status} ${res.statusText}`);
+    }
+
+    return Buffer.from(await res.arrayBuffer());
   }
 }
 

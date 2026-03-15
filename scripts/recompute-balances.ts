@@ -41,17 +41,21 @@ async function recompute() {
 
     // Apply account events for this date
     const dayEvents = eventsByDate.get(date) || [];
+    let hadTrueUp = false;
     for (const ev of dayEvents) {
       if (ev.type === "CONTRIBUTION") {
         balance += ev.amount;
       } else if (ev.type === "WITHDRAWAL") {
         balance -= ev.amount;
+      } else if (ev.type === "TRUE_UP") {
+        balance = ev.amount;
+        hadTrueUp = true;
       }
     }
 
-    // Apply daily growth
-    if (balance > 0 && dailyGrowth !== 0) {
-      balance = balance * (1 + dailyGrowth / 100);
+    // Apply daily growth (skip if TRUE_UP — statement balance already includes it)
+    if (!hadTrueUp && balance > 0 && dailyGrowth !== 0) {
+      balance = balance * (1 + (dailyGrowth * 0.75) / 100);
     }
 
     updates.push({ date, personal_balance: balance });

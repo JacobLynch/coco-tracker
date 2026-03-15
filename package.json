@@ -9,12 +9,14 @@
     "lint": "eslint",
     "db:migrate": "npx tsx --env-file=.env.local scripts/migrate.ts",
     "backfill": "npx tsx --env-file=.env.local scripts/backfill.ts",
-    "recompute-balances": "npx tsx --env-file=.env.local scripts/recompute-balances.ts"
+    "recompute-balances": "npx tsx --env-file=.env.local scripts/recompute-balances.ts",
+    "balance-on-date": "npx tsx --env-file=.env.local scripts/balance-on-date.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
     "@trigger.dev/sdk": "^4.4.0",
     "next": "16.1.6",
+    "pdf-parse": "^2.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

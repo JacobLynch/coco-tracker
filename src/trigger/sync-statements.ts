@@ -1,7 +1,6 @@
 import { schedules, logger } from "@trigger.dev/sdk";
 import { createClient } from "@libsql/client";
 import { FinanceClient } from "../lib/finance-client";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 /** Parse month name from statement doc name, e.g. "Coco Capital Statement [Feb, 2026]" → "2026-02" */
 function parseStatementMonth(name: string): string | null {
@@ -40,6 +39,14 @@ export const syncStatements = schedules.task({
   id: "sync-statements",
   cron: "30 6 * * *", // daily at 6:30 AM UTC
   run: async () => {
+    // Polyfill browser globals that pdfjs-dist expects
+    if (typeof globalThis.DOMMatrix === "undefined") {
+      (globalThis as any).DOMMatrix = class DOMMatrix {};
+      (globalThis as any).ImageData = class ImageData {};
+      (globalThis as any).Path2D = class Path2D {};
+    }
+    const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+
     const db = createClient({
       url: process.env.TURSO_DATABASE_URL!,
       authToken: process.env.TURSO_AUTH_TOKEN,

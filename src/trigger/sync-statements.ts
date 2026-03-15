@@ -1,7 +1,7 @@
 import { schedules, logger } from "@trigger.dev/sdk";
 import { createClient } from "@libsql/client";
 import { FinanceClient } from "../lib/finance-client";
-import { PDFParse } from "pdf-parse";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 /** Parse month name from statement doc name, e.g. "Coco Capital Statement [Feb, 2026]" → "2026-02" */
 function parseStatementMonth(name: string): string | null {
@@ -78,14 +78,21 @@ export const syncStatements = schedules.task({
       // 3. Download and parse the PDF
       logger.info(`Processing statement for ${month}: ${doc.name}`);
       const pdfBuffer = await client.downloadDoc(doc.id);
-      const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
-      const textResult = await parser.getText();
-      await parser.destroy();
-      const balance = parseEndingBalance(textResult.text);
+      const pdf = await getDocument({ data: new Uint8Array(pdfBuffer) }).promise;
+      let fullText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        fullText += content.items
+          .map((item) => ("str" in item ? item.str : ""))
+          .join(" ");
+      }
+      await pdf.destroy();
+      const balance = parseEndingBalance(fullText);
 
       if (balance === null) {
         logger.error(
-          `Could not parse ending balance from PDF for ${month}. Text preview: ${textResult.text.slice(0, 500)}`
+          `Could not parse ending balance from PDF for ${month}. Text preview: ${fullText.slice(0, 500)}`
         );
         continue;
       }

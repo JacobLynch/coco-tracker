@@ -17,7 +17,7 @@ export default defineConfig({
   maxDuration: 60,
   build: {
     extensions: [
-      additionalPackages({ packages: ["@libsql/linux-x64-gnu", "pdf-parse"] }),
+      additionalPackages({ packages: ["@libsql/linux-x64-gnu"] }),
     ],
   },
 });

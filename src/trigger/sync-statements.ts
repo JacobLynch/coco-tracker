@@ -1,6 +1,7 @@
 import { schedules, logger } from "@trigger.dev/sdk";
 import { createClient } from "@libsql/client";
 import { FinanceClient } from "../lib/finance-client";
+import { extractText } from "unpdf";
 
 /** Parse month name from statement doc name, e.g. "Coco Capital Statement [Feb, 2026]" → "2026-02" */
 function parseStatementMonth(name: string): string | null {
@@ -39,14 +40,6 @@ export const syncStatements = schedules.task({
   id: "sync-statements",
   cron: "30 6 * * *", // daily at 6:30 AM UTC
   run: async () => {
-    // Polyfill browser globals that pdfjs-dist expects
-    if (typeof globalThis.DOMMatrix === "undefined") {
-      (globalThis as any).DOMMatrix = class DOMMatrix {};
-      (globalThis as any).ImageData = class ImageData {};
-      (globalThis as any).Path2D = class Path2D {};
-    }
-    const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
     const db = createClient({
       url: process.env.TURSO_DATABASE_URL!,
       authToken: process.env.TURSO_AUTH_TOKEN,
@@ -85,16 +78,8 @@ export const syncStatements = schedules.task({
       // 3. Download and parse the PDF
       logger.info(`Processing statement for ${month}: ${doc.name}`);
       const pdfBuffer = await client.downloadDoc(doc.id);
-      const pdf = await getDocument({ data: new Uint8Array(pdfBuffer) }).promise;
-      let fullText = "";
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        fullText += content.items
-          .map((item) => ("str" in item ? item.str : ""))
-          .join(" ");
-      }
-      await pdf.destroy();
+      const { text } = await extractText(new Uint8Array(pdfBuffer));
+      const fullText = Array.isArray(text) ? text.join("\n") : text;
       const balance = parseEndingBalance(fullText);
 
       if (balance === null) {

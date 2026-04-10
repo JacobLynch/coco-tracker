@@ -10,7 +10,9 @@
     "db:migrate": "npx tsx --env-file=.env.local scripts/migrate.ts",
     "backfill": "npx tsx --env-file=.env.local scripts/backfill.ts",
     "recompute-balances": "npx tsx --env-file=.env.local scripts/recompute-balances.ts",
-    "balance-on-date": "npx tsx --env-file=.env.local scripts/balance-on-date.ts"
+    "balance-on-date": "npx tsx --env-file=.env.local scripts/balance-on-date.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
@@ -30,6 +32,7 @@
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

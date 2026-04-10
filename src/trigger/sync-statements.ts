@@ -2,39 +2,7 @@ import { schedules, logger } from "@trigger.dev/sdk";
 import { createClient } from "@libsql/client";
 import { FinanceClient } from "../lib/finance-client";
 import { extractText } from "unpdf";
-
-/** Parse month name from statement doc name, e.g. "Coco Capital Statement [Feb, 2026]" → "2026-02" */
-function parseStatementMonth(name: string): string | null {
-  const match = name.match(/\[(\w+),\s*(\d{4})\]/);
-  if (!match) return null;
-
-  const months: Record<string, string> = {
-    Jan: "01", Feb: "02", Mar: "03", Apr: "04",
-    May: "05", Jun: "06", Jul: "07", Aug: "08",
-    Sep: "09", Oct: "10", Nov: "11", Dec: "12",
-  };
-
-  const monthNum = months[match[1]];
-  if (!monthNum) return null;
-  return `${match[2]}-${monthNum}`;
-}
-
-/** Extract "Current Balance" dollar amount from statement PDF text */
-function parseEndingBalance(text: string): number | null {
-  // Look for "Current Balance" followed by a dollar amount
-  const match = text.match(/Current\s+Balance[:\s]*\$?([\d,]+\.\d{2})/i);
-  if (match) {
-    return parseFloat(match[1].replace(/,/g, ""));
-  }
-
-  // Fallback: look for "Ending Balance" in table rows
-  const fallback = text.match(/Ending\s+Balance[:\s]*\$?([\d,]+\.\d{2})/i);
-  if (fallback) {
-    return parseFloat(fallback[1].replace(/,/g, ""));
-  }
-
-  return null;
-}
+import { parseStatementMonth, parseEndingBalance } from "../lib/parse-statement";
 
 export const syncStatements = schedules.task({
   id: "sync-statements",

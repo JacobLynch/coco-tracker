@@ -10,6 +10,11 @@ const MONTH_FULL: Record<string, string> = {
   September: "09", October: "10", November: "11", December: "12",
 };
 
+const FULL_MONTH_RE = new RegExp(
+  `(${Object.keys(MONTH_FULL).join("|")})\\s+(\\d{4})`,
+  "i"
+);
+
 /**
  * Parse month from statement doc name.
  * Supports two formats:
@@ -25,13 +30,8 @@ export function parseStatementMonth(name: string): string | null {
   }
 
   // New format: Month YYYY (full month name, no brackets)
-  const fullMonthPattern = new RegExp(
-    `(${Object.keys(MONTH_FULL).join("|")})\\s+(\\d{4})`,
-    "i"
-  );
-  const fullMatch = name.match(fullMonthPattern);
+  const fullMatch = name.match(FULL_MONTH_RE);
   if (fullMatch) {
-    // Capitalize first letter to match lookup keys
     const key = fullMatch[1].charAt(0).toUpperCase() + fullMatch[1].slice(1).toLowerCase();
     const monthNum = MONTH_FULL[key];
     if (monthNum) return `${fullMatch[2]}-${monthNum}`;

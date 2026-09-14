@@ -10,6 +10,7 @@ interface Summary {
   period_change_pct: number;
   fund_balance: number;
   as_of: string;
+  last_true_up: { date: string; amount: number } | null;
 }
 
 interface RecentDay {
@@ -56,6 +57,15 @@ function formatDate(dateStr: string): string {
   const date = new Date(dateStr + "T00:00:00");
   return date.toLocaleDateString("en-US", {
     month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  return date.toLocaleDateString("en-US", {
+    month: "short",
     day: "numeric",
     year: "numeric",
   });
@@ -254,9 +264,20 @@ export default function Page() {
                   {formatFundBalance(data.fund_balance)}
                 </p>
               </div>
-              <p className="text-[11px] text-zinc-600">
-                {formatDate(data.as_of)}
-              </p>
+              <div className="space-y-1">
+                <p className="text-[11px] text-zinc-600">
+                  {formatDate(data.as_of)}
+                </p>
+                {data.last_true_up && (
+                  <p className="text-[11px] text-zinc-700">
+                    Verified {formatShortDate(data.last_true_up.date)}
+                    {" · "}
+                    <span className="font-mono">
+                      {formatFundBalance(data.last_true_up.amount)}
+                    </span>
+                  </p>
+                )}
+              </div>
             </>
           )}
         </div>

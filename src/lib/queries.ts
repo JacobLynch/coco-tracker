@@ -47,6 +47,21 @@ export async function getRecentDays() {
   return days; // oldest-first (left-to-right)
 }
 
+export async function getLastTrueUp() {
+  const result = await db.execute(
+    `SELECT date, amount FROM account_events
+     WHERE type = 'TRUE_UP'
+     ORDER BY date DESC LIMIT 1`
+  );
+
+  if (result.rows.length === 0) return null;
+
+  return {
+    date: result.rows[0].date as string,
+    amount: result.rows[0].amount as number,
+  };
+}
+
 export async function getSummary(period: Period) {
   // Latest row with personal_balance
   const latest = await db.execute(
@@ -99,6 +114,8 @@ export async function getSummary(period: Period) {
     }
   }
 
+  const lastTrueUp = await getLastTrueUp();
+
   const periodChangeUsd = currentBalance - periodStartBalance;
   const periodChangePct =
     periodStartBalance !== 0
@@ -111,5 +128,6 @@ export async function getSummary(period: Period) {
     period_change_pct: periodChangePct,
     fund_balance: current.end_balance as number,
     as_of: current.date as string,
+    last_true_up: lastTrueUp,
   };
 }
